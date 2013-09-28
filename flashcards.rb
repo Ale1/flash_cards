@@ -12,7 +12,7 @@ class Deck
 
   # end
   def shuffle
-    @cards.sort_by {rand}
+    @cards.shuffle!
   end
 
   def draw
@@ -21,8 +21,12 @@ class Deck
 
   def to_s
     deck_string = ""
-    @cards.each { |card| deck_string << "#{card}\n"}
+    @cards.each { |card| deck_string << "#{card}\n\n"}
     deck_string
+  end
+
+  def empty?
+    @cards.empty?
   end
    
   # @deck = Deck.new( filename )
@@ -39,7 +43,7 @@ class Card
   end
 
   def to_s
-    "#{@word}: #{@definition}"
+    "Word: #{@word}\n#{@definition}"
   end
 
 end
@@ -62,19 +66,65 @@ end
 
 # puts FileHandler.parse_to_card_array('flashcard_samples.txt')
 
+class Viewer
+  def self.display_to_console(output)
+    puts output
+  end
+end
+
 
 class GameController
+  ASK_QUESTION = "Here is the definition. What is the word?!? If you give up, type 'I LOVE TURTLES!'"
+  TRY_AGAIN = "WRONG!!!! Try harder."
+  RIGHT_ANSWER = "Awesome job. You got the right answer."
+
+  def initialize(name_of_file_txt)
+    @name_of_file_txt = name_of_file_txt
+  end
+
+  def run(name_of_file_txt)
+    @my_deck = Deck.new(name_of_file_txt)
+    @my_deck.shuffle
+    # Viewer.display_to_console(@my_deck)
+    select_card
   
-  def self.run(name_of_file_txt)
-    my_deck = Deck.new(name_of_file_txt)
-    puts my_deck
+    until @my_deck.empty?
+      puts
+      @current_card = select_card
+      ask_question
+      guess = get_input
+      until answer_is_correct?(guess)
+        Viewer.display_to_console(TRY_AGAIN)
+        guess = get_input
+      end
+      Viewer.display_to_console(RIGHT_ANSWER)
+
+    end
 
   # my_deck Card.new(word_definition_hash)
   end
 
+  def select_card
+    @my_deck.draw
+  end
+
+  def ask_question 
+    Viewer.display_to_console(ASK_QUESTION)
+    Viewer.display_to_console(@current_card.definition)
+  end
+
+  def answer_is_correct?(input)
+    input == @current_card.word || input == 'I LOVE TURTLES!'
+  end
+
+  def get_input
+    gets.chomp
+  end
+
+
 end
 
-name_of_file_txt = ARGV[0]
-GameController.run(name_of_file_txt)
+game = GameController.new('flashcard_samples.txt')
+game.run('flashcard_samples.txt')
 
 
